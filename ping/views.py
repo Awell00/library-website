@@ -1,7 +1,7 @@
 from django.http import HttpResponse
+from .models import ToDOLIst, Item
 
-def index(response):
-    return HttpResponse("Hello world!")
+def index(response, id):
+    ls = ToDOLIst.objects.get(id=id)
+    return HttpResponse("<h1>%s</h1>" % ls.name)
 
-def v1(response):
-    return HttpResponse("V1")
