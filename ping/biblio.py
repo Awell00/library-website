@@ -38,7 +38,7 @@ def ajouter_adherent():
     prenom=input("Prénom du nouvel adhérent ?: ")
     adresse=input("Adresse: ")
     tel=input("Son tel: ")
-    requete="INSERT INTO adherent(nomAdherent, prenomAdherent, adresse, telephone) VALUES ("+nom+","+prenom+", "+adresse+","+tel+")"
+    requete='INSERT INTO adherent(nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
     curseur.execute(requete)
 def liste_adherent():
     pass
@@ -83,7 +83,7 @@ def appli():
 table_actions = [None,table_livre,table_adherent,table_emprunt,ajouter_livre,ajouter_adherent,ajouter_emprunt,liste_livre,liste_emprunt,liste_adherent,liste_retard,supprimer_livre,supprimer_adherent,supprimer_emprunt,supprimer_tables]
 
 connexion = connect('bibliotheque.db')
-aujourdhui=input("Date aujourd'hui sous la forme JJ/MM/AAAA ?") # à éliminer, trouver la date en utilisant la bibliothèque time
+# aujourdhui=input("Date aujourd'hui sous la forme JJ/MM/AAAA ?") # à éliminer, trouver la date en utilisant la bibliothèque time
 curseur = connexion.cursor()
 appli()
 curseur.execute("select * from adherent")
