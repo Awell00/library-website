@@ -1,16 +1,16 @@
 from django.db import models
 
 # Create your models here.
-class ToDOLIst(models.Model):
+class Test(models.Model):
     name = models.CharField(max_length=200)
 
-    def __str___(self):
+    def __str__(self):
         return self.name
 
 class Item(models.Model):
-    todolist = models.ForeignKey(ToDOLIst, on_delete=models.CASCADE)
+    todolist = models.ForeignKey(Test, on_delete=models.CASCADE)
     text = models.CharField(max_length=300)
     complete = models.BooleanField()
 
-    def __str___(self):
+    def __str__(self):
         return self.text
