@@ -9,7 +9,7 @@ import uuid
 # words = "Harry Potter Chamber of Secrets"
 # isbn = "9782070585205"
 
-# book = isbnlib.meta(isbn)
+
 # word2 = isbnlib.goom(words)
 # cover = isbnlib.cover(isbn)
 
@@ -36,8 +36,42 @@ def index(response):
 def home(response):
     return render(response, 'ping/home.html', {})
 
-def liste(response):
-    return render(response, 'ping/liste.html', {"name": "test"})
+@csrf_exempt
+def livre(request):
+    liste=[]
+    data = request.POST
+    isbn_data = data.get("isbn", "")
+    
+
+    con = sqlite3.connect("bibliotheque.db", )
+
+    isbn=isbn_data
+    
+
+    # book = isbnlib.meta(isbn)
+    # print(book["Authors"])
+    author='test'
+    title='test'
+    if isbn_data == '':
+        pass
+    else:
+        res ='INSERT OR REPLACE INTO livre(isbn, titre, auteur, editeur) VALUES ("'+isbn+'","'+title+'","'+author+'","zefef")'
+        cur = con.cursor()
+        cur.execute(res)
+        
+        con.commit()
+    cur = con.cursor()
+    res2 = cur.execute("SELECT * FROM livre")
+    con.commit()
+
+    test = res2.fetchall()
+
+    for item in res2.fetchall():
+        liste.append(item)
+        
+    print(liste)
+
+    return render(request, 'ping/livre.html', {"livre": test})
 
 @csrf_exempt
 def add(request):
@@ -88,12 +122,12 @@ def delete(request):
 
     identifiant=id_data
     print(identifiant)
-    requete="delete from adherent where identifiant =:identifiant"
+    requete="delete from adherent where mdp =:identifiant"
     
     con3 = sqlite3.connect("bibliotheque.db")
 
     cur = con3.cursor()
-    res2 = "SELECT * FROM adherent where identifiant =:identifiant"
+    res2 = "SELECT * FROM adherent where mdp =:identifiant"
     test5 = cur.execute(res2,{"identifiant":identifiant})
     liste2.append(test5.fetchall())
     cur.execute(requete,{"identifiant":identifiant})

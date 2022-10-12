@@ -1,0 +1,31 @@
+{% extends "ping/base.html" %}
+{% block title%}View List{% endblock %}
+
+{% block content %}
+    <form action = "" method = "POST">
+        {% csrf_token %}
+        <label for="isbn">ISBN: </label>
+        <input id="isbn" type="text" name="isbn">
+        
+        <!-- <label for="prenom">OR Title: </label>
+        <input id="prenom" type="text" name="prenom">
+
+        <label for="adresse">OR A: </label>
+        <input id="adresse" type="text" name="adresse">
+
+        <label for="tel">Tel: </label>
+        <input id="tel" type="text" name="tel"> -->
+        
+        <input type="submit" value="OK">
+    </form>
+
+    <h1>New member:</h1>
+
+    <ul>
+    {% for item in livre %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+
+    <a href="/">home</a>
+{% endblock%}
