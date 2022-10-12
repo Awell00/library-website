@@ -42,6 +42,7 @@ def liste(response):
 @csrf_exempt
 def add(request):
     liste=[]
+    liste_len=0
     id = str(uuid.uuid4())[:8]
     data = request.POST
     nom_data = data.get("nom", "")
@@ -58,20 +59,23 @@ def add(request):
     if nom_data == '' or prenom_data == "" or adresse_data == "" or tel_data == "":
         pass
     else:
-        res ='INSERT OR REPLACE INTO adherent(identifiant, nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+id+'","'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
+        res ='INSERT OR REPLACE INTO adherent(nomAdherent, prenomAdherent, adresse, telephone, mdp) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'","'+id+'")'
         cur = con.cursor()
         cur.execute(res)
         
         con.commit()
     # for item in res2.fetchall():
     #     liste.append(item)
+    liste_len += 1
     cur = con.cursor()
-    res2 = cur.execute("SELECT * FROM adherent")
+    res2 = cur.execute("SELECT * FROM adherent ORDER BY identifiant DESC LIMIT "+str(liste_len)+";")
     con.commit()
+
+    print(liste_len)
 
     for item in res2.fetchall():
         liste.append(item[1])
-
+        
     print(liste)
 
     return render(request, 'ping/add.html', {"adherent": liste})
