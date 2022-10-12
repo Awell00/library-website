@@ -1,47 +1,22 @@
 from urllib import response
 from django.shortcuts import render
 from django.http import HttpResponse
-# from django.http import HttpResponseRedirect
 import sqlite3
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
-# from .forms import InputForms
-# from .forms import x
- 
-# Create your views here.
+import isbnlib 
 
+isbn = "1883319420"
 
-#@csrf_exempt
+book = isbnlib.meta(isbn)
 
-# def ajouter_adherent(adding):
-#     nom=adding
-#     cur = con.cursor()
-#     con.commit()
-#     prenom="prenom"
-#     adresse="adresse"
-#     tel="tel"
-#     requete='INSERT INTO adherent(nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
-#     cur.execute(requete)
-    
+print(book['Authors'])
+print(book['Title'])
 
-# def ajouter_adherent():
-#     nom=input("Nom: ")
-#     prenom=input("Prénom du nouvel adhérent ?: ")
-#     adresse=input("Adresse: ")
-#     tel=input("Son tel: ")
-#     requete='INSERT INTO adherent(nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
-#     cur.execute(requete)
-#     res3 = cur.execute("SELECT nomAdherent FROM adherent")
-#     con.commit()
-#     return res3.fetchall()
 
 con2 = sqlite3.connect("bibliotheque.db")
 cur2 = con2.cursor()
 res = cur2.execute('SELECT * FROM adherent')
 con2.commit()
-
-# test = ajouter_adherent()
-
-# test = res.fetchall()
 
 name = res.fetchall()
 
@@ -54,8 +29,6 @@ def home(response):
 
 def liste(response):
     return render(response, 'ping/liste.html', {"name": "test"})
-
-
 
 @csrf_exempt
 def add(request):
