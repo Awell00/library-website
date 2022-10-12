@@ -39,9 +39,10 @@ def ajouter_adherent():
     adresse=input("Adresse: ")
     tel=input("Son tel: ")
     requete='INSERT INTO adherent(nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
-    curseur.execute(requete)
+    resultat = curseur.execute(requete)
 def liste_adherent():
-    pass
+    requete='SELECT nomAdherent FROM adherent'
+    resultat = curseur.execute(requete)
 def ajouter_livre():
     pass
 def ajouter_emprunt():

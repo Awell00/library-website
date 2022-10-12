@@ -1,0 +1,26 @@
+{% extends "ping/base.html" %}
+
+
+
+{% block content %}
+
+
+    <form action = "" method = "POST">
+        {% csrf_token %}
+        <label for="id">ID: </label>
+        <input id="id" type="text" name="id">
+        
+        <input type="submit" value="OK">
+    </form>
+
+    <h1>Deleted Items: </h1>
+    <ul>
+    {% for item in element_delete %}
+        <li>{{ item }}</li>
+    {% endfor %}
+    </ul>
+    
+    <h2>{{ element_delete }}</h2>
+    <a href="/">home</a>
+{% endblock%}
+

@@ -4,24 +4,33 @@ from django.http import HttpResponse
 import sqlite3
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import isbnlib 
+import uuid
 
-isbn = "1883319420"
+# words = "Harry Potter Chamber of Secrets"
+# isbn = "9782070585205"
 
-book = isbnlib.meta(isbn)
+# book = isbnlib.meta(isbn)
+# word2 = isbnlib.goom(words)
+# cover = isbnlib.cover(isbn)
 
-print(book['Authors'])
-print(book['Title'])
+# print(book["Authors"])
+# print(book["Title"])
+
+# print(word2)
+# print(cover)
 
 
-con2 = sqlite3.connect("bibliotheque.db")
-cur2 = con2.cursor()
-res = cur2.execute('SELECT * FROM adherent')
-con2.commit()
 
-name = res.fetchall()
+
 
 
 def index(response):
+    con2 = sqlite3.connect("bibliotheque.db")
+    cur2 = con2.cursor()
+    res = cur2.execute('SELECT * FROM adherent')
+    con2.commit()
+
+    name = res.fetchall()
     return render(response, 'ping/base.html', {"name": name})
 
 def home(response):
@@ -32,41 +41,61 @@ def liste(response):
 
 @csrf_exempt
 def add(request):
-    liste1= []
-    # con = sqlite3.connect("bibliotheque.db")
-    # if request.method == 'POST':
-    #     # create a form instance and populate it with data from the request:
-    #     form = InputForms(request.POST)
-    #     # check whether it's valid:
-    #     if form.is_valid():
-    #         # process the data in form.cleaned_data as required
-    #         # ...
-    #         # redirect to a new URL:
-    #         return HttpResponseRedirect('')
-
-    # # if a GET (or any other method) we'll create a blank form
-    # else:
-    #     form = InputForms()
+    liste=[]
+    id = str(uuid.uuid4())[:8]
     data = request.POST
     nom_data = data.get("nom", "")
     prenom_data = data.get("prenom", "")
     adresse_data = data.get("adresse", "")
     tel_data = data.get("tel", "")
-    # liste1.append(nom_data)
-    # liste1.append(prenom_data)
-    
+
     con = sqlite3.connect("bibliotheque.db")
 
     nom=nom_data
     prenom=prenom_data
     adresse=adresse_data
     tel=tel_data
-    requete='INSERT OR REPLACE INTO adherent(nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
+    if nom_data == '' or prenom_data == "" or adresse_data == "" or tel_data == "":
+        pass
+    else:
+        res ='INSERT OR REPLACE INTO adherent(identifiant, nomAdherent, prenomAdherent, adresse, telephone) VALUES ("'+id+'","'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'")'
+        cur = con.cursor()
+        cur.execute(res)
+        
+        con.commit()
+    # for item in res2.fetchall():
+    #     liste.append(item)
     cur = con.cursor()
-    cur.execute(requete)
-    res3 = cur.execute("SELECT * FROM adherent")
+    res2 = cur.execute("SELECT * FROM adherent")
     con.commit()
-    print(res3.fetchall())
 
-    return render(request, 'ping/add.html')
+    for item in res2.fetchall():
+        liste.append(item[1])
+
+    print(liste)
+
+    return render(request, 'ping/add.html', {"adherent": liste})
+
+@csrf_exempt
+def delete(request):
+    liste2 = []
+    data2 = request.POST
+    id_data = data2.get("id", "")
+
+    identifiant=id_data
+    print(identifiant)
+    requete="delete from adherent where identifiant =:identifiant"
+    
+    con3 = sqlite3.connect("bibliotheque.db")
+
+    cur = con3.cursor()
+    res2 = "SELECT * FROM adherent where identifiant =:identifiant"
+    test5 = cur.execute(res2,{"identifiant":identifiant})
+    liste2.append(test5.fetchall())
+    cur.execute(requete,{"identifiant":identifiant})
+    
+    delete = liste2
+    con3.commit()
+
+    return render(request, 'ping/delete.html', {"element_delete": delete})
     
