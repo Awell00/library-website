@@ -7,15 +7,26 @@
 
     <form action = "" method = "POST">
         {% csrf_token %}
-        <label for="id">ID: </label>
+        <label for="id">ID of Adherent: </label>
         <input id="id" type="text" name="id">
         
         <input type="submit" value="OK">
     </form>
+    <form action = "" method = "POST">
+        {% csrf_token %}
+        <label for="book">ISBN of Book: </label>
+        <input id="book" type="text" name="book">
+        
+        <input type="submit" value="OK">
+    </form>
 
-    <h1>Deleted Items: </h1>
+    <h1>Deleted Adherent: </h1>
     
     <h3>{{ item }}</h3>
+
+    <h1>Deleted Book: </h1>
+    
+    <h3>{{ item_book }}</h3>
   
     <a href="/">home</a>
 {% endblock%}

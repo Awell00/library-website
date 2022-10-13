@@ -54,15 +54,21 @@ def livre(request):
     for item in res2.fetchall():
         liste.append(item)
 
+    if data == {}:
+        value = ""
+    else:
+        value = livre_liste[-1][1]
+
     con.commit()
 
-    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": livre_liste[-1][1]})
+    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value})
 
 @csrf_exempt
 def add(request):
     liste=[]
     id = str(uuid.uuid4())[:8]
     data = request.POST
+    print(data)
     nom_data = data.get("nom", "")
     prenom_data = data.get("prenom", "")
     adresse_data = data.get("adresse", "")
@@ -90,31 +96,55 @@ def add(request):
     for item in res3.fetchall():
         liste.append(item)
 
-    return render(request, 'ping/add.html', {"item": liste[-1][1], "adherent_liste": liste})
+    if data == {}:
+        value = ""
+    else:
+        value = liste[-1][1]
+
+    return render(request, 'ping/add.html', {"item": value, "adherent_liste": liste})
 
 @csrf_exempt
 def delete(request):
-    liste2 = []
-    liste = []
     data2 = request.POST
     id_data = data2.get("id", "")
+    book_data = data2.get("book", "")
 
     identifiant=id_data
+    book_id=book_data
 
     requete="delete from adherent where mdp =:identifiant"
+
+    requete2="delete from livre where isbn =:isbn"
     
     con3 = sqlite3.connect("bibliotheque.db")
 
     cur = con3.cursor()
     res2 = "SELECT * FROM adherent where mdp =:identifiant"
+    res3 = "SELECT * FROM livre where isbn =:isbn"
+    test6 = cur.execute(res3,{"isbn":book_id})
     test5 = cur.execute(res2,{"identifiant":identifiant})
-    liste2.append(test5.fetchall())
-    cur.execute(requete,{"identifiant":identifiant})
+
+    value = test5.fetchall()
+    print(test6.fetchall())
+    value4 = test6.fetchall()
     
-    for item in liste2:
-        liste.append(item)
+    
+    if value == []:
+        value = ""
+    else:
+        value = value[0][1]
+
+    if value4 == []:
+        value4 = ""
+    else:
+        value4 = value4[0][1] 
+
+    cur.execute(requete,{"identifiant":identifiant})
+    cur.execute(requete2,{"isbn":book_id})
+    
+   
 
     con3.commit()
 
-    return render(request, 'ping/delete.html', {"item": liste2})
+    return render(request, 'ping/delete.html', {"item": value, "item_book": value4})
     
