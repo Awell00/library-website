@@ -6,24 +6,6 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import isbnlib 
 import uuid
 
-# words = "Harry Potter Chamber of Secrets"
-# isbn = "9782070585205"
-
-
-# word2 = isbnlib.goom(words)
-# cover = isbnlib.cover(isbn)
-
-# print(book["Authors"])
-# print(book["Title"])
-
-# print(word2)
-# print(cover)
-
-
-
-
-
-
 def index(response):
     con2 = sqlite3.connect("bibliotheque.db")
     cur2 = con2.cursor()
@@ -41,42 +23,44 @@ def livre(request):
     liste=[]
     data = request.POST
     isbn_data = data.get("isbn", "")
-    
 
     con = sqlite3.connect("bibliotheque.db", )
 
     isbn=isbn_data
-    
 
-    # book = isbnlib.meta(isbn)
-    # print(book["Authors"])
-    author='test'
-    title='test'
+    book = isbnlib.meta(isbn)
+    author_data = str(book.get('Authors'))[2:-2]
+    title_data = str(book.get('Title'))
+    publisher_data = str(book.get('Publisher'))
+    
+    author=author_data
+    title=title_data
+    publisher=publisher_data
     if isbn_data == '':
         pass
     else:
-        res ='INSERT OR REPLACE INTO livre(isbn, titre, auteur, editeur) VALUES ("'+isbn+'","'+title+'","'+author+'","zefef")'
+        res ='INSERT OR REPLACE INTO livre(isbn, titre, auteur, editeur) VALUES ("'+isbn+'","'+title+'","'+author+'","'+publisher+'")'
         cur = con.cursor()
         cur.execute(res)
         
         con.commit()
+
     cur = con.cursor()
     res2 = cur.execute("SELECT * FROM livre")
     con.commit()
 
-    test = res2.fetchall()
+    livre_liste = res2.fetchall()
 
     for item in res2.fetchall():
         liste.append(item)
-        
-    print(liste)
 
-    return render(request, 'ping/livre.html', {"livre": test})
+    con.commit()
+
+    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": livre_liste[-1][1]})
 
 @csrf_exempt
 def add(request):
     liste=[]
-    liste_len=0
     id = str(uuid.uuid4())[:8]
     data = request.POST
     nom_data = data.get("nom", "")
@@ -98,30 +82,25 @@ def add(request):
         cur.execute(res)
         
         con.commit()
-    # for item in res2.fetchall():
-    #     liste.append(item)
-    liste_len += 1
+
     cur = con.cursor()
-    res2 = cur.execute("SELECT * FROM adherent ORDER BY identifiant DESC LIMIT "+str(liste_len)+";")
+    res3 = cur.execute("SELECT * FROM adherent")
     con.commit()
 
-    print(liste_len)
+    for item in res3.fetchall():
+        liste.append(item)
 
-    for item in res2.fetchall():
-        liste.append(item[1])
-        
-    print(liste)
-
-    return render(request, 'ping/add.html', {"adherent": liste})
+    return render(request, 'ping/add.html', {"item": liste[-1][1], "adherent_liste": liste})
 
 @csrf_exempt
 def delete(request):
     liste2 = []
+    liste = []
     data2 = request.POST
     id_data = data2.get("id", "")
 
     identifiant=id_data
-    print(identifiant)
+
     requete="delete from adherent where mdp =:identifiant"
     
     con3 = sqlite3.connect("bibliotheque.db")
@@ -132,8 +111,10 @@ def delete(request):
     liste2.append(test5.fetchall())
     cur.execute(requete,{"identifiant":identifiant})
     
-    delete = liste2
+    for item in liste2:
+        liste.append(item)
+
     con3.commit()
 
-    return render(request, 'ping/delete.html', {"element_delete": delete})
+    return render(request, 'ping/delete.html', {"item": liste2})
     

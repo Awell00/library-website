@@ -33,12 +33,16 @@
 
     <h1>New member:</h1>
 
+    <h3>{{ item }}</h3>
+
+    <h1>Member:</h1>
+
     <ul>
-    {% for item in adherent %}
-        <li>{{ item }}</li>
-    {% endfor %}
-    </ul>
-    
+        {% for item in adherent_liste %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+
     <a href="/">home</a>
 {% endblock%}
 
