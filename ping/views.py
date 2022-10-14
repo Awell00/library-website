@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import isbnlib 
 import uuid
 
+
 def index(response):
     con2 = sqlite3.connect("bibliotheque.db")
     cur2 = con2.cursor()
@@ -105,46 +106,64 @@ def add(request):
 
 @csrf_exempt
 def delete(request):
-    data2 = request.POST
-    id_data = data2.get("id", "")
-    book_data = data2.get("book", "")
+    book_delete=[]
+    data = request.POST
+    id_data = data.get("id", "")
+    book_data = data.get("book", "")
 
     identifiant=id_data
     book_id=book_data
 
-    requete="delete from adherent where mdp =:identifiant"
 
+    requete="delete from adherent where mdp =:identifiant"
     requete2="delete from livre where isbn =:isbn"
     
-    con3 = sqlite3.connect("bibliotheque.db")
+    con = sqlite3.connect("bibliotheque.db")
 
-    cur = con3.cursor()
+    cur = con.cursor()
     res2 = "SELECT * FROM adherent where mdp =:identifiant"
-    res3 = "SELECT * FROM livre where isbn =:isbn"
-    test6 = cur.execute(res3,{"isbn":book_id})
+
     test5 = cur.execute(res2,{"identifiant":identifiant})
 
     value = test5.fetchall()
-    print(test6.fetchall())
-    value4 = test6.fetchall()
+
+    isbn=book_id
+    con2 = sqlite3.connect("bibliotheque.db")
+    cur2 = con2.cursor()
+    res = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
+    test3 = res.fetchall()
+    con2.commit()
     
-    
+
     if value == []:
         value = ""
     else:
         value = value[0][1]
 
-    if value4 == []:
-        value4 = ""
+    if test3 == []:
+        book_delete = ""
     else:
-        value4 = value4[0][1] 
+        for item in test3:
+            book_delete.append(item)
+
+        book_delete = book_delete[0][1]
 
     cur.execute(requete,{"identifiant":identifiant})
     cur.execute(requete2,{"isbn":book_id})
-    
-   
 
-    con3.commit()
+    con.commit()
 
-    return render(request, 'ping/delete.html', {"item": value, "item_book": value4})
+    return render(request, 'ping/delete.html', {"item": value, "item_book": book_delete})
     
+@csrf_exempt
+def emprunts(request):
+    data = request.POST
+    isbn_data = data.get("isbn", "")
+
+    # con = sqlite3.connect("bibliotheque.db", )
+
+    isbn=isbn_data
+
+    print(isbn)
+    
+    return render(request, 'ping/emprunts.html', {})
