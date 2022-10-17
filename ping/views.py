@@ -230,47 +230,6 @@ def emprunts(request):
 
 
 
-    # isbn=isbn_data
-    # con2 = sqlite3.connect("bibliotheque.db")
-    # cur2 = con2.cursor()
-    # res = cur2.execute('SELECT * FROM emprunt')
     
-    # con2.commit()
-
-    # for item in res.fetchall():
-    #     liste.append(item)
-
-    # if isbn_data == '':
-    #     pass
-    # else:
-    #     res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+isbn+'","test","zfef","zefzefe")'
-    #     cur = con.cursor()
-    #     cur.execute(res)
-            
-    #     con.commit()
-
-    # if data == {}:
-    #     value = ""
-    # else:
-        
-    #     con2 = sqlite3.connect("bibliotheque.db")
-    #     cur2 = con2.cursor()
-    #     res5 = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
-    #     test5 = res5.fetchall()
-    #     print(test5)
-    #     con2.commit()
-
-    #     if test5 == []:
-    #         value = ''
-        
-    #     else:
-            
-    #         value = liste[-1][1]
-          
-
-    # # res4 = cur2.execute('SELECT * FROM emprunt')
-    # # test4 = res4.fetchall()
-    # con2.commit()
-
     
     return render(request, 'ping/emprunts.html', {"item": value, "liste_emprunts": livre_liste, "title": title})
