@@ -7,10 +7,10 @@
         <label for="isbn">ISBN: </label>
         <input id="isbn" type="text" name="isbn">
         
-        <!-- <label for="prenom">OR Title: </label>
+        <label for="prenom">Member </label>
         <input id="prenom" type="text" name="prenom">
 
-        <label for="adresse">OR A: </label>
+        <!-- <label for="adresse">OR A: </label>
         <input id="adresse" type="text" name="adresse">
 
         <label for="tel">Tel: </label>
@@ -19,14 +19,14 @@
         <input type="submit" value="OK">
     </form>
 
-    <h1>New Book:</h1>
+    <h1>New Loan:</h1>
 
-    <h3>{{ item }}</h3>
+    <h3>{{ item }}{{ title }}</h3>
 
-    <h1>Books:</h1>
+    <h1>Loans:</h1>
 
     <ul>
-    {% for item in livre %}
+    {% for item in liste_emprunts %}
         <li>{{ item }}</li>
     {% endfor %}
     </ul>

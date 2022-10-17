@@ -22,12 +22,23 @@ def home(response):
 @csrf_exempt
 def livre(request):
     liste=[]
+    liste4=[]
     data = request.POST
     isbn_data = data.get("isbn", "")
 
     con = sqlite3.connect("bibliotheque.db", )
 
     isbn=isbn_data
+
+    cover2 = isbnlib.cover(isbn)
+
+
+    if cover2 == {}:
+        cover="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn)
+    else:
+        cover=cover2.get('thumbnail')
+
+   
 
     book = isbnlib.meta(isbn)
     author_data = str(book.get('Authors'))[2:-2]
@@ -62,7 +73,7 @@ def livre(request):
 
     con.commit()
 
-    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value})
+    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value, "cover": cover})
 
 @csrf_exempt
 def add(request):
@@ -157,13 +168,109 @@ def delete(request):
     
 @csrf_exempt
 def emprunts(request):
+    liste = []
     data = request.POST
     isbn_data = data.get("isbn", "")
+    member_data = data.get("prenom", "")
 
-    # con = sqlite3.connect("bibliotheque.db", )
+    con = sqlite3.connect("bibliotheque.db", )
 
     isbn=isbn_data
+    member=member_data
 
-    print(isbn)
+
+    book = isbnlib.meta(isbn)
+    title_data = str(book.get('Title'))
+
+    author_data = "test"
+    publisher_data = "test"
     
-    return render(request, 'ping/emprunts.html', {})
+    cur = con.cursor()
+    res4 = cur.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
+    test3 = res4.fetchall()
+    con.commit()
+
+    print(test3)
+
+    author=author_data
+    title=title_data
+    publisher=publisher_data
+    if isbn_data == '':
+        pass
+    else:
+        if test3 == []:
+            pass
+        else:
+            res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+isbn+'","'+member+'","'+author+'","'+publisher+'")'
+            cur = con.cursor()
+            cur.execute(res)
+            
+            con.commit()
+
+    cur = con.cursor()
+    res2 = cur.execute("SELECT * FROM emprunt")
+    con.commit()
+
+    livre_liste = res2.fetchall()
+
+    for item in res2.fetchall():
+        liste.append(item)
+
+    if data == {}:
+        value = ""
+    else:
+        if test3 == []:
+            value = ""
+            title = ""
+        else:
+            value = livre_liste[-1][1] + " / "
+
+    con.commit()
+
+
+
+
+    # isbn=isbn_data
+    # con2 = sqlite3.connect("bibliotheque.db")
+    # cur2 = con2.cursor()
+    # res = cur2.execute('SELECT * FROM emprunt')
+    
+    # con2.commit()
+
+    # for item in res.fetchall():
+    #     liste.append(item)
+
+    # if isbn_data == '':
+    #     pass
+    # else:
+    #     res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+isbn+'","test","zfef","zefzefe")'
+    #     cur = con.cursor()
+    #     cur.execute(res)
+            
+    #     con.commit()
+
+    # if data == {}:
+    #     value = ""
+    # else:
+        
+    #     con2 = sqlite3.connect("bibliotheque.db")
+    #     cur2 = con2.cursor()
+    #     res5 = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
+    #     test5 = res5.fetchall()
+    #     print(test5)
+    #     con2.commit()
+
+    #     if test5 == []:
+    #         value = ''
+        
+    #     else:
+            
+    #         value = liste[-1][1]
+          
+
+    # # res4 = cur2.execute('SELECT * FROM emprunt')
+    # # test4 = res4.fetchall()
+    # con2.commit()
+
+    
+    return render(request, 'ping/emprunts.html', {"item": value, "liste_emprunts": livre_liste, "title": title})
