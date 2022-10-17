@@ -7,6 +7,13 @@ import isbnlib
 import uuid
 
 
+# con3 = sqlite3.connect("bibliotheque.db")
+# cur3 = con3.cursor()
+# res6 = cur3.execute('SELECT * FROM emprunt WHERE isbn="%s" AND identifiant=%s' % (isbn_data,member_data))
+# con3.commit()
+# test7 = res6.fetchall()
+# print(res6.fetchall())
+
 def index(response):
     con2 = sqlite3.connect("bibliotheque.db")
     cur2 = con2.cursor()
@@ -32,11 +39,16 @@ def livre(request):
 
     cover2 = isbnlib.cover(isbn)
 
+    cover="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn)
 
-    if cover2 == {}:
-        cover="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn)
+    import requests
+    img_size = requests.get(cover).content
+    
+
+    if len(img_size) == 807:
+        cover3=cover2.get('thumbnail')  # type: ignore
     else:
-        cover=cover2.get('thumbnail')
+        cover3="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn)
 
    
 
@@ -73,7 +85,7 @@ def livre(request):
 
     con.commit()
 
-    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value, "cover": cover})
+    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value, "cover": cover3})
 
 @csrf_exempt
 def add(request):
@@ -118,16 +130,21 @@ def add(request):
 @csrf_exempt
 def delete(request):
     book_delete=[]
+    member_delete=[]
     data = request.POST
     id_data = data.get("id", "")
     book_data = data.get("book", "")
+    isbn_data = data.get("isbn", "")
+    member_data = data.get("prenom", "")
 
     identifiant=id_data
     book_id=book_data
 
+    
 
     requete="delete from adherent where mdp =:identifiant"
     requete2="delete from livre where isbn =:isbn"
+    requete3="delete from emprunt where isbn =:isbn and identifiant =:prenom"
     
     con = sqlite3.connect("bibliotheque.db")
 
@@ -135,15 +152,31 @@ def delete(request):
     res2 = "SELECT * FROM adherent where mdp =:identifiant"
 
     test5 = cur.execute(res2,{"identifiant":identifiant})
+    cur.execute(requete3,{"isbn":isbn_data, "prenom":member_data})
 
     value = test5.fetchall()
+
+    
 
     isbn=book_id
     con2 = sqlite3.connect("bibliotheque.db")
     cur2 = con2.cursor()
     res = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
+    # res5 = cur2.execute('SELECT * FROM emprunt WHERE isbn=1 ')
     test3 = res.fetchall()
+    # test7 = res5.fetchall()
+    # print(test7)
     con2.commit()
+
+    # test6 = 1781101035
+    # test8 = 'zefzefzeff'
+
+    con3 = sqlite3.connect("bibliotheque.db")
+    cur3 = con3.cursor()
+    res6 = cur3.execute('SELECT * FROM emprunt WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
+    con3.commit()
+    test7 = res6.fetchall()
+    print(test7)
     
 
     if value == []:
@@ -159,12 +192,23 @@ def delete(request):
 
         book_delete = book_delete[0][1]
 
+    if data == {}:
+        member_delete = ""
+    else:
+        if test7 == []:
+            member_delete = ""
+        else:
+            for item in test7:
+                member_delete.append(item)
+
+            member_delete = member_delete[0][1]
+
     cur.execute(requete,{"identifiant":identifiant})
     cur.execute(requete2,{"isbn":book_id})
 
     con.commit()
 
-    return render(request, 'ping/delete.html', {"item": value, "item_book": book_delete})
+    return render(request, 'ping/delete.html', {"item": value, "item_book": book_delete, "item_loan": member_delete})
     
 @csrf_exempt
 def emprunts(request):
@@ -218,6 +262,7 @@ def emprunts(request):
 
     if data == {}:
         value = ""
+        title = ""
     else:
         if test3 == []:
             value = ""
@@ -227,9 +272,4 @@ def emprunts(request):
 
     con.commit()
 
-
-
-
-    
-    
     return render(request, 'ping/emprunts.html', {"item": value, "liste_emprunts": livre_liste, "title": title})

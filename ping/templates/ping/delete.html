@@ -19,14 +19,28 @@
         
         <input type="submit" value="OK">
     </form>
+    <form action = "" method = "POST">
+        {% csrf_token %}
+        <label for="isbn">ISBN: </label>
+        <input id="isbn" type="text" name="isbn">
+        
+        <label for="prenom">Member </label>
+        <input id="prenom" type="text" name="prenom">
+        
+        <input type="submit" value="OK">
+    </form>
 
-    <h1>Deleted Adherent: </h1>
+    <h1>Deleted Member: </h1>
     
     <h3>{{ item }}</h3>
 
     <h1>Deleted Book: </h1>
     
     <h3>{{ item_book }}</h3>
+
+    <h1>Deleted Loan: </h1>
+    
+    <h3>{{ item_loan }}</h3>
   
     <a href="/">home</a>
 {% endblock%}
