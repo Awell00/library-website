@@ -15,13 +15,13 @@ import uuid
 # print(res6.fetchall())
 
 def index(response):
-    con2 = sqlite3.connect("bibliotheque.db")
-    cur2 = con2.cursor()
-    res = cur2.execute('SELECT * FROM adherent')
-    con2.commit()
+    # con2 = sqlite3.connect("bibliotheque.db")
+    # cur2 = con2.cursor()
+    # res = cur2.execute('SELECT * FROM adherent')
+    # con2.commit()
 
-    name = res.fetchall()
-    return render(response, 'ping/base.html', {"name": name})
+    # name = res.fetchall()
+    return render(response, 'ping/base.html')
 
 def home(response):
     return render(response, 'ping/home.html', {})
@@ -131,6 +131,7 @@ def add(request):
 def delete(request):
     book_delete=[]
     member_delete=[]
+    member_del=[]
     data = request.POST
     id_data = data.get("id", "")
     book_data = data.get("book", "")
@@ -156,20 +157,15 @@ def delete(request):
 
     value = test5.fetchall()
 
-    
 
     isbn=book_id
     con2 = sqlite3.connect("bibliotheque.db")
     cur2 = con2.cursor()
     res = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
-    # res5 = cur2.execute('SELECT * FROM emprunt WHERE isbn=1 ')
+    
     test3 = res.fetchall()
-    # test7 = res5.fetchall()
-    # print(test7)
+    
     con2.commit()
-
-    # test6 = 1781101035
-    # test8 = 'zefzefzeff'
 
     con3 = sqlite3.connect("bibliotheque.db")
     cur3 = con3.cursor()
@@ -180,9 +176,14 @@ def delete(request):
     
 
     if value == []:
-        value = ""
+        member_del = ""
     else:
-        value = value[0][1]
+        for item in value:
+            member_del.append(item)
+
+        member_del = member_del[0][1]
+    
+    print(member_del)
 
     if test3 == []:
         book_delete = ""
@@ -208,7 +209,7 @@ def delete(request):
 
     con.commit()
 
-    return render(request, 'ping/delete.html', {"item": value, "item_book": book_delete, "item_loan": member_delete})
+    return render(request, 'ping/delete.html', {"item": member_del, "item_book": book_delete, "item_loan": member_delete})
     
 @csrf_exempt
 def emprunts(request):
@@ -231,7 +232,9 @@ def emprunts(request):
     
     cur = con.cursor()
     res4 = cur.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
+    res5 = cur.execute('SELECT * FROM adherent WHERE mdp=?', [member] )
     test3 = res4.fetchall()
+    test9 = res5.fetchall()
     con.commit()
 
     print(test3)
@@ -239,10 +242,10 @@ def emprunts(request):
     author=author_data
     title=title_data
     publisher=publisher_data
-    if isbn_data == '':
+    if isbn_data == '' and member_data == '':
         pass
     else:
-        if test3 == []:
+        if test3 == [] and test9 == []:
             pass
         else:
             res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+isbn+'","'+member+'","'+author+'","'+publisher+'")'
