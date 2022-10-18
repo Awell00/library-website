@@ -280,10 +280,20 @@ def retard(request):
     cur5 = con5.cursor()
     res10 = cur5.execute('SELECT isbn, identifiant, dateretour FROM emprunt WHERE dateretour < ?', [today_date])
     test12 = res10.fetchall()
-    con5.commit()
     
+    con9 = sqlite3.connect("bibliotheque.db")
+    cur5 = con5.cursor()
+    cur9 = con9.cursor()
 
-    print(test12)
+    # for i in range(len(test12)):
+    #     cur9.execute('INSERT INTO retour(isbn, identifiant, dateretard) VALUES("'+ str(test12[i][0]) +'","'+ str(test12[i][1]) +'","'+ str(test12[i][2]) +'")')
+    
+    requete5 = cur9.execute("SELECT * FROM retour")
+    test90 = requete5.fetchall()
+
+    con5.commit()
+
+    print(test90)
 
     book = isbnlib.meta(isbn_data)
     title_data = str(book.get('Title'))
@@ -309,4 +319,4 @@ def retard(request):
 
     con.commit()
 
-    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title, "delay": test12})
+    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title, "delay": test90})
