@@ -9,29 +9,21 @@
         
         <label for="prenom">ID of Member: </label>
         <input id="prenom" type="text" name="prenom">
-
-        <!-- <label for="adresse">OR A: </label>
-        <input id="adresse" type="text" name="adresse">
-
-        <label for="tel">Tel: </label>
-        <input id="tel" type="text" name="tel"> -->
         
         <input type="submit" value="OK">
     </form>
 
-    <h1>New Loan:</h1>
+    <h1>Return Of The Loan: </h1>
 
-    <h3>{{ item }}{{ title }}</h3>
+    <h3>{{ item_loan }}{{ title }}</h3>
 
-    <h1>Loans:</h1>
+    <h1>Delay:</h1>
 
     <ul>
-    {% for item in liste_emprunts %}
+    {% for item in delay %}
         <li>{{ item }}</li>
     {% endfor %}
     </ul>
-
-    
 
     <a href="/">home</a>
 {% endblock%}
