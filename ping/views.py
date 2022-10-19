@@ -8,9 +8,35 @@ import uuid
 
 from datetime import date, timedelta
 
+today_date = date.today()
+
+isbn_data = "9788498387650"
+member_data = "d183226d"
+
+con = sqlite3.connect("bibliotheque.db")
+cur = con.cursor()
+cur.execute("delete from retour where isbn > 0")
+res = cur.execute('SELECT isbn, identifiant, dateretour FROM emprunt WHERE dateretour < ?', [today_date])
+test = res.fetchall()
 
 
 
+
+for i in range(len(test)):
+    cur.execute('INSERT OR REPLACE INTO retour(isbn, identifiant, dateretard) VALUES("'+str(test[i][0]) +'","'+ str(test[i][1]) +'","'+ str(test[i][2])+'")')
+
+
+# con2 = sqlite3.connect("bibliotheque.db")
+# cur2 = con2.cursor()
+# res2 = cur2.execute('delete from retour where isbn =%s and identifiant =%s' % (isbn_data, member_data))
+
+# con_retour_delete = sqlite3.connect("bibliotheque.db")
+# cur_retour_delete = con_retour_delete.cursor()
+# res_retour_delete = cur_retour_delete.execute()
+# con_retour_delete.commit()
+
+res_retard = cur.execute("SELECT * FROM retour")
+value_retard = res_retard.fetchall()
 
 def index(response):
 
@@ -169,8 +195,8 @@ def delete(request):
 
         book_delete = book_delete[0][1]
 
-    cur.execute(requete,{"identifiant":identifiant})
-    cur.execute(requete2,{"isbn":book_id})
+    # cur.execute(requete,{"identifiant":identifiant})
+    # cur.execute(requete2,{"isbn":book_id})
 
     con.commit()
 
@@ -255,45 +281,17 @@ def retard(request):
     isbn_data = data.get("isbn", "")
     member_data = data.get("prenom", "")
 
-    requete3="delete from emprunt where isbn =:isbn and identifiant =:prenom"
-    requete2="delete from retour where identifiant > 0"
-
-    con = sqlite3.connect("bibliotheque.db")
-
-    cur = con.cursor()
-    cur3 = con.cursor()
-
-    cur.execute(requete3,{"isbn":isbn_data, "prenom":member_data})
-    cur3.execute(requete2)
-
     today_date = date.today()
     # td = timedelta(-42)
 
-    con3 = sqlite3.connect("bibliotheque.db")
-    cur3 = con3.cursor()
-    res6 = cur3.execute('SELECT * FROM emprunt WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
-    con3.commit()
-    test7 = res6.fetchall()
+    con_retour = sqlite3.connect("bibliotheque.db")
+    cur_retour = con_retour.cursor()
+    res_retour = cur_retour.execute('SELECT * FROM emprunt WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
+    con_retour.commit()
+    retour = res_retour.fetchall()
 
-
-    con5 = sqlite3.connect("bibliotheque.db")
-    cur5 = con5.cursor()
-    res10 = cur5.execute('SELECT isbn, identifiant, dateretour FROM emprunt WHERE dateretour < ?', [today_date])
-    test12 = res10.fetchall()
     
-    con9 = sqlite3.connect("bibliotheque.db")
-    cur5 = con5.cursor()
-    cur9 = con9.cursor()
-
-    # for i in range(len(test12)):
-    #     cur9.execute('INSERT INTO retour(isbn, identifiant, dateretard) VALUES("'+ str(test12[i][0]) +'","'+ str(test12[i][1]) +'","'+ str(test12[i][2]) +'")')
     
-    requete5 = cur9.execute("SELECT * FROM retour")
-    test90 = requete5.fetchall()
-
-    con5.commit()
-
-    print(test90)
 
     book = isbnlib.meta(isbn_data)
     title_data = str(book.get('Title'))
@@ -304,19 +302,22 @@ def retard(request):
         retour_loan = ""
         title = ""
     else:
-        if test7 == []:
+        if retour == []:
             retour_loan = ""
             title = ""
         else:
-            for item in test7:
-                retour_loan.append(item)
+            con = sqlite3.connect("bibliotheque.db")
+            cur = con.cursor()
 
-            res11 = cur5.execute('SELECT * FROM emprunt WHERE dateretour < ?', [today_date])
-            test12 = res11.fetchall()
-            con5.commit()
+            cur.execute("DELETE FROM retour WHERE isbn = ?", [isbn_data])
+            con.commit()
+
+            for item in retour:
+                retour_loan.append(item)
 
             retour_loan = retour_loan[0][1] + " / "
 
-    con.commit()
+    
 
-    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title, "delay": test90})
+
+    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title, "delay": value_retard})
