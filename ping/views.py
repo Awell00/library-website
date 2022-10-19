@@ -5,38 +5,8 @@ import sqlite3
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import isbnlib 
 import uuid
-
+import requests
 from datetime import date, timedelta
-
-today_date = date.today()
-
-isbn_data = "9788498387650"
-member_data = "d183226d"
-
-con = sqlite3.connect("bibliotheque.db")
-cur = con.cursor()
-cur.execute("delete from retour where isbn > 0")
-res = cur.execute('SELECT isbn, identifiant, dateretour FROM emprunt WHERE dateretour < ?', [today_date])
-test = res.fetchall()
-
-
-
-
-for i in range(len(test)):
-    cur.execute('INSERT OR REPLACE INTO retour(isbn, identifiant, dateretard) VALUES("'+str(test[i][0]) +'","'+ str(test[i][1]) +'","'+ str(test[i][2])+'")')
-
-
-# con2 = sqlite3.connect("bibliotheque.db")
-# cur2 = con2.cursor()
-# res2 = cur2.execute('delete from retour where isbn =%s and identifiant =%s' % (isbn_data, member_data))
-
-# con_retour_delete = sqlite3.connect("bibliotheque.db")
-# cur_retour_delete = con_retour_delete.cursor()
-# res_retour_delete = cur_retour_delete.execute()
-# con_retour_delete.commit()
-
-res_retard = cur.execute("SELECT * FROM retour")
-value_retard = res_retard.fetchall()
 
 def index(response):
 
@@ -47,242 +17,238 @@ def home(response):
 
 @csrf_exempt
 def livre(request):
-    liste=[]
-    # liste4=[]
+    con = sqlite3.connect("bibliotheque.db", )
+
+    livre_liste=[]
     data = request.POST
     isbn_data = data.get("isbn", "")
 
-    con = sqlite3.connect("bibliotheque.db", )
+    cover_isbnlib = isbnlib.cover(isbn_data)
 
-    isbn=isbn_data
-
-    cover2 = isbnlib.cover(isbn)
-
-    cover="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn)
-
-    import requests
-    img_size = requests.get(cover).content
-    
+    cover_openlibrary="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn_data)
+    img_size = requests.get(cover_openlibrary).content
 
     if len(img_size) == 807:
-        cover3=cover2.get('thumbnail')  # type: ignore
+        cover_img=cover_isbnlib.get('thumbnail')  # type: ignore
     else:
-        cover3="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn)
+        cover_img="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn_data)
 
-   
-
-    book = isbnlib.meta(isbn)
+    book = isbnlib.meta(isbn_data)
     author_data = str(book.get('Authors'))[2:-2]
     title_data = str(book.get('Title'))
     publisher_data = str(book.get('Publisher'))
     
-    author=author_data
-    title=title_data
-    publisher=publisher_data
     if isbn_data == '':
         pass
     else:
-        res ='INSERT OR REPLACE INTO livre(isbn, titre, auteur, editeur) VALUES ("'+isbn+'","'+title+'","'+author+'","'+publisher+'")'
+        res_add_livre ='INSERT OR REPLACE INTO livre(isbn, titre, auteur, editeur) VALUES ("'+isbn_data+'","'+title_data+'","'+author_data+'","'+publisher_data+'")'
         cur = con.cursor()
-        cur.execute(res)
-        
+        cur.execute(res_add_livre)
         con.commit()
 
     cur = con.cursor()
-    res2 = cur.execute("SELECT * FROM livre")
+    res__select_livre = cur.execute("SELECT * FROM livre")
     con.commit()
 
-    livre_liste = res2.fetchall()
-
-    for item in res2.fetchall():
-        liste.append(item)
+    for item in res__select_livre.fetchall():
+        livre_liste.append(item)
 
     if data == {}:
-        value = ""
+        value_new_livre = ""
     else:
-        value = livre_liste[-1][1]
+        value_new_livre = livre_liste[-1][1]
 
     con.commit()
+    con.close()
 
-    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value, "cover": cover3})
+    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value_new_livre, "cover": cover_img})
 
 @csrf_exempt
 def add(request):
-    liste=[]
+    con = sqlite3.connect("bibliotheque.db")
+    
+    liste_adherent=[]
     id = str(uuid.uuid4())[:8]
+
     data = request.POST
-    print(data)
     nom_data = data.get("nom", "")
     prenom_data = data.get("prenom", "")
     adresse_data = data.get("adresse", "")
     tel_data = data.get("tel", "")
 
-    con = sqlite3.connect("bibliotheque.db")
+    
 
-    nom=nom_data
-    prenom=prenom_data
-    adresse=adresse_data
-    tel=tel_data
     if nom_data == '' or prenom_data == "" or adresse_data == "" or tel_data == "":
         pass
     else:
-        res ='INSERT OR REPLACE INTO adherent(nomAdherent, prenomAdherent, adresse, telephone, mdp) VALUES ("'+nom+'","'+prenom+'", "'+adresse+'","'+tel+'","'+id+'")'
+        res_add_adherent ='INSERT OR REPLACE INTO adherent(nomAdherent, prenomAdherent, adresse, telephone, mdp) VALUES ("'+nom_data+'","'+prenom_data+'", "'+adresse_data+'","'+tel_data+'","'+id+'")'
         cur = con.cursor()
-        cur.execute(res)
-        
+        cur.execute(res_add_adherent)
         con.commit()
 
     cur = con.cursor()
-    res3 = cur.execute("SELECT * FROM adherent")
+    res_select_adherent = cur.execute("SELECT * FROM adherent")
     con.commit()
-
-    for item in res3.fetchall():
-        liste.append(item)
+  
+    for item in res_select_adherent.fetchall():
+        liste_adherent.append(item)
 
     if data == {}:
-        value = ""
+        value_new_adherent = ""
     else:
-        value = liste[-1][1]
+        value_new_adherent = liste_adherent[-1][1]
 
-    return render(request, 'ping/add.html', {"item": value, "adherent_liste": liste})
+    return render(request, 'ping/add.html', {"item": value_new_adherent, "adherent_liste": liste_adherent})
 
 @csrf_exempt
 def delete(request):
+    con = sqlite3.connect("bibliotheque.db")
+    cur = con.cursor()
+
     book_delete=[]
-    member_del=[]
+    member_delete=[]
+
     data = request.POST
     id_data = data.get("id", "")
-    book_data = data.get("book", "")
+    isbn_data = data.get("book", "")
 
-    identifiant=id_data
-    book_id=book_data
+    res_delete_adherent="delete from adherent where mdp =:identifiant"
+    res_delete_livre="delete from livre where isbn =:isbn"
 
-    requete="delete from adherent where mdp =:identifiant"
-    requete2="delete from livre where isbn =:isbn"
+    con_select_adherent = sqlite3.connect("bibliotheque.db")
+    cur_select_adherent = con_select_adherent.cursor()
+    res_select_adherent = cur_select_adherent.execute('SELECT * FROM livre WHERE isbn="%s"' % isbn_data)
+    retour2 = res_select_adherent.fetchall()
 
-    con = sqlite3.connect("bibliotheque.db")
-
-    cur = con.cursor()
+    con_select_adherent.commit()
     
+    con_select_livre = sqlite3.connect("bibliotheque.db")
+    cur_select_livre = con_select_livre.cursor()
+    res_select_livre = cur_select_livre.execute('SELECT * FROM livre WHERE isbn="%s"' % isbn_data)
+    con_select_livre.commit()
+    retour = res_select_livre.fetchall()
 
-    isbn=book_id
-    con2 = sqlite3.connect("bibliotheque.db")
-    cur2 = con2.cursor()
-    res = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
-    res9 = cur2.execute("SELECT * FROM adherent where mdp =?", [identifiant])
-
-    test5 = res9.fetchall()
-    test3 = res.fetchall()
-    
-    con2.commit()
-    
-
-    if test5 == []:
-        member_del = ""
-    else:
-        for item in test5:
-            member_del.append(item)
-
-        member_del = member_del[0][1]
-    
-    print(member_del)
-
-    if test3 == []:
+    if data == {}:
         book_delete = ""
     else:
-        for item in test3:
-            book_delete.append(item)
+        if retour == []:
+            book_delete = ""
+        else:
+            for item in retour:
+                book_delete.append(item)
 
-        book_delete = book_delete[0][1]
+            book_delete = book_delete[0][1]
 
-    # cur.execute(requete,{"identifiant":identifiant})
-    # cur.execute(requete2,{"isbn":book_id})
+    if data == {}:
+        member_delete = ""
+    else:
+        if retour2 == []:
+            member_delete = ""
+        else:
+            for item in retour2:
+                member_delete.append(item)
+
+            member_delete = member_delete[0][1]
+
+    # if res_select_adherent.fetchall() == []:
+    #     member_delete = ""
+    # else:
+    #     for item in res_select_adherent:
+    #         member_delete.append(item)
+
+    #     member_delete = member_delete[0][1]
+
+    cur.execute(res_delete_adherent,{"identifiant":id_data})
+    cur.execute(res_delete_livre,{"isbn":isbn_data})
 
     con.commit()
+    con.close()
 
-    return render(request, 'ping/delete.html', {"item": member_del, "item_book": book_delete})
+    return render(request, 'ping/delete.html', {"item": member_delete, "item_book": book_delete})
     
 @csrf_exempt
 def emprunts(request):
-    liste = []
+    con = sqlite3.connect("bibliotheque.db", )
+
+    today_date = date.today()
+    td = timedelta(-42)
+    date_emprunt=str(today_date)
+    date_retour=str(today_date+td)
+
+    liste_emprunts = []
+
     data = request.POST
     isbn_data = data.get("isbn", "")
     member_data = data.get("prenom", "")
 
-    con = sqlite3.connect("bibliotheque.db", )
-
-    isbn=isbn_data
-    member=member_data
-
-
-    book = isbnlib.meta(isbn)
-    title_data = str(book.get('Title'))
-
-    
-    
     cur = con.cursor()
-    res4 = cur.execute('SELECT * FROM livre WHERE isbn=?', [isbn] )
-    res5 = cur.execute('SELECT * FROM adherent WHERE mdp=?', [member] )
+    res_select_livre = cur.execute('SELECT * FROM livre WHERE isbn=?', [isbn_data] )
+    res_select_adherent = cur.execute('SELECT * FROM adherent WHERE mdp=?', [member_data] )
     
-    test3 = res4.fetchall()
-    test9 = res5.fetchall()
     con.commit()
 
-    
+    book = isbnlib.meta(isbn_data)
+    title_data = str(book.get('Title'))
 
-    today_date = date.today()
-    td = timedelta(-42)
-     
-
-    title=title_data
-    date_emprunt=str(today_date)
-    date_retour=str(today_date+td)
     if isbn_data == '' and member_data == '':
         pass
     else:
-        if test3 == [] and test9 == []:
+        if res_select_livre == [] and res_select_adherent.fetchall() == []:
             pass
         else:
-            res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+isbn+'","'+member+'","'+date_emprunt+'","'+date_retour+'")'
+            res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+isbn_data+'","'+member_data+'","'+date_emprunt+'","'+date_retour+'")'
             cur = con.cursor()
             cur.execute(res)
             
             con.commit()
+            
 
     cur = con.cursor()
-    res2 = cur.execute("SELECT * FROM emprunt")
+    res_select_emprunts = cur.execute("SELECT * FROM emprunt")
     con.commit()
-
-    livre_liste = res2.fetchall()
-
-    for item in res2.fetchall():
-        liste.append(item)
+    
+    for item in res_select_emprunts.fetchall():
+        liste_emprunts.append(item)
 
     if data == {}:
-        value = ""
-        title = ""
+        value_new_emprunt = ""
+        title_data = ""
     else:
-        if test3 == []:
-            value = ""
-            title = ""
+        if res_select_livre.fetchall() == []:
+            value_new_emprunt = ""
+            title_data = ""
         else:
-            value = livre_liste[-1][1] + " / "
+            value_new_emprunt = liste_emprunts[-1][1] + " / "
 
     con.commit()
+    con.close()
 
-    return render(request, 'ping/emprunts.html', {"item": value, "liste_emprunts": livre_liste, "title": title})
+    return render(request, 'ping/emprunts.html', {"item": value_new_emprunt, "liste_emprunts": liste_emprunts, "title": title_data})
 
 
 @csrf_exempt
 def retard(request):
-    retour_loan=[]
-    data = request.POST
+    con = sqlite3.connect("bibliotheque.db")
 
+    today_date = date.today()
+
+    retour_loan=[]
+
+    data = request.POST
     isbn_data = data.get("isbn", "")
     member_data = data.get("prenom", "")
 
-    today_date = date.today()
-    # td = timedelta(-42)
+    cur = con.cursor()
+    cur.execute("delete from retour where isbn > 0")
+    res = cur.execute('SELECT isbn, identifiant, dateretour FROM emprunt WHERE dateretour < ?', [today_date])
+    test = res.fetchall()
+
+    for i in range(len(test)):
+        cur.execute('INSERT OR REPLACE INTO retour(isbn, identifiant, dateretard) VALUES("'+str(test[i][0]) +'","'+ str(test[i][1]) +'","'+ str(test[i][2])+'")')
+    con.commit()
+
+    book = isbnlib.meta(isbn_data)
+    title_data = str(book.get('Title'))
 
     con_retour = sqlite3.connect("bibliotheque.db")
     cur_retour = con_retour.cursor()
@@ -290,34 +256,33 @@ def retard(request):
     con_retour.commit()
     retour = res_retour.fetchall()
 
-    
-    
-
-    book = isbnlib.meta(isbn_data)
-    title_data = str(book.get('Title'))
-
-
-    title=title_data
     if data == {}:
         retour_loan = ""
-        title = ""
+        title_data = ""
     else:
         if retour == []:
             retour_loan = ""
-            title = ""
+            title_data = ""
         else:
-            con = sqlite3.connect("bibliotheque.db")
-            cur = con.cursor()
-
-            cur.execute("DELETE FROM retour WHERE isbn = ?", [isbn_data])
-            con.commit()
-
             for item in retour:
                 retour_loan.append(item)
 
             retour_loan = retour_loan[0][1] + " / "
 
-    
+    if isbn_data == '':
+        pass
+    else:
+        con_retard = sqlite3.connect("bibliotheque.db")
+        cur_retard = con_retard.cursor()
 
+        cur_retard.execute('DELETE FROM emprunt WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
+        cur_retard.execute('DELETE FROM retour WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
+        con_retard.commit()
 
-    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title, "delay": value_retard})
+    res_retard = cur.execute("SELECT * FROM retour")
+    con.commit()
+    value_retard = res_retard.fetchall()
+
+    con.close()
+
+    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title_data, "delay": value_retard})
