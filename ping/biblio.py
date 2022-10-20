@@ -10,10 +10,10 @@ def afficher_menu():
     print("7  Afficher la liste des livres!!!")
     print("8  Afficher la liste des livres empruntés!!!")
     print("9  Afficher la liste des adhérents!!!")
-    print("10 Afficher la liste des emprunts en retard")
+    print("10 Afficher la liste des emprunts en retard!!!")
     print("11 Supprimer un livre!!!")
     print("12 Supprimer un adhérent!!!")
-    print("13 Retour de livre")
+    print("13 Retour de livre!!!")
     print("14 Supprimer toute la base de données")
     print("0  Quitter")
 def lire_action():
