@@ -164,6 +164,7 @@ def delete(request):
 def emprunts(request):
     con = sqlite3.connect("bibliotheque.db", )
     con2 = sqlite3.connect("bibliotheque.db", )
+    con3 = sqlite3.connect("bibliotheque.db", )
 
     today_date = date.today()
     td = timedelta(-42)
@@ -172,33 +173,52 @@ def emprunts(request):
 
     liste_emprunts = []
     livre_liste = []
+    liste_verify=[]
 
     data = request.POST
     isbn_data = data.get("isbn", "")
     member_data = data.get("prenom", "")
 
     cur = con.cursor()
-    # res_select_livre = cur.execute('SELECT * FROM livres WHERE isbn=?', [isbn_data] )
-    
+    cur3 = con3.cursor()
     cur2 = con2.cursor()
+    
     res_select_livre = cur2.execute('SELECT * FROM livre WHERE isbn=?', [isbn_data] )
     con2.commit()
 
     for item in res_select_livre.fetchall():
         livre_liste.append(item)
+    
+    emprunt_impossible = ""
 
     if data == {}:
         id_livre = ""
+        emprunt_impossible = ""
     else:
-        id_livre = livre_liste[0][0]
+        for i in range(len(livre_liste)):
+            if livre_liste[i][-1] == 0:
+                id_livre = livre_liste[i][0]
+                print(id_livre)
+                break
+            else:
+                if livre_liste[i][0] == livre_liste[-1][0]:
+                    emprunt_impossible = "Impossible: Livre indisponible"
+                    break
+                else:
+                    pass
 
     con2.commit()
 
+    
+
     res_select_adherent = cur.execute('SELECT * FROM adherent WHERE mdp=?', [member_data] )
+    res_verify_adherent = cur3.execute('SELECT  isbn FROM emprunt WHERE identifiant=?', [member_data] )
+    for item in res_verify_adherent.fetchall():
+        liste_verify.append(str(item))
     
     con.commit()
 
-    print(id_livre)
+    
 
     book = isbnlib.meta(isbn_data)
     title_data = str(book.get('Title'))
@@ -209,11 +229,17 @@ def emprunts(request):
         if res_select_livre.fetchall() == [] and res_select_adherent.fetchall() == []:
             pass
         else:
-            res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour) VALUES ("'+id_livre+'","'+member_data+'","'+date_emprunt+'","'+date_retour+'")'
-            cur = con.cursor()
-            cur.execute(res)
             
-            con.commit()
+            if emprunt_impossible == "":
+                
+                if "('"+isbn_data+"',)" in liste_verify:
+                    emprunt_impossible = "Impossible: Livre déjà emprunté"
+                else:   
+                    res ='INSERT OR REPLACE INTO emprunt(isbn, identifiant, dateemprunt, dateretour, mdp) VALUES ("'+isbn_data+'","'+member_data+'","'+date_emprunt+'","'+date_retour+'","'+str(id_livre)+'")'
+                    cur = con.cursor()
+                    cur.execute(res)
+                        
+                    con.commit()
             
 
     cur = con.cursor()
@@ -233,12 +259,15 @@ def emprunts(request):
         else:
             value_new_emprunt = liste_emprunts[-1][1] + " / "
 
-    cur.execute("UPDATE livre set emprunt = 1")
+    
+
+    if emprunt_impossible == "":
+        cur.execute('UPDATE livre set emprunt = 1 WHERE mdp="%s"' % id_livre)
 
     con.commit()
     con.close()
 
-    return render(request, 'ping/emprunts.html', {"item": value_new_emprunt, "liste_emprunts": liste_emprunts, "title": title_data})
+    return render(request, 'ping/emprunts.html', {"item": value_new_emprunt, "liste_emprunts": liste_emprunts, "title": title_data, "erreur": emprunt_impossible})
 
 
 @csrf_exempt
@@ -271,18 +300,7 @@ def retard(request):
     con_retour.commit()
     retour = res_retour.fetchall()
 
-    book = isbnlib.meta(isbn_data)
-    author_data = str(book.get('Authors'))[2:-2]
-    title_data = str(book.get('Title'))
-    publisher_data = str(book.get('Publisher'))
-    
-    if isbn_data == '':
-        pass
-    else:
-        res_add_livre ='INSERT OR REPLACE INTO livre(mdp, isbn, titre, auteur, editeur) VALUES ("'+id+'","'+isbn_data+'","'+title_data+'","'+author_data+'","'+publisher_data+'")'
-        cur = con.cursor()
-        cur.execute(res_add_livre)
-        con.commit()
+    value_retour_loan=""
 
     if data == {}:
         retour_loan = ""
@@ -295,16 +313,17 @@ def retard(request):
             for item in retour:
                 retour_loan.append(item)
 
-            retour_loan = retour_loan[0][1] + " / "
+            value_retour_loan = retour_loan[0][1] + " / "
 
     if isbn_data == '':
         pass
     else:
         con_retard = sqlite3.connect("bibliotheque.db")
         cur_retard = con_retard.cursor()
-
+        cur_retard.execute('UPDATE livre set emprunt = 0 WHERE mdp="%s"' % retour_loan[0][-1] )
         cur_retard.execute('DELETE FROM emprunt WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
         cur_retard.execute('DELETE FROM retour WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
+        
         con_retard.commit()
 
     
@@ -315,4 +334,4 @@ def retard(request):
 
     con.close()
 
-    return render(request, 'ping/retard.html', {"item_loan": retour_loan, "title": title_data, "delay": value_retard})
+    return render(request, 'ping/retard.html', {"item_loan": value_retour_loan, "title": title_data, "delay": value_retard})
