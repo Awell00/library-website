@@ -109,56 +109,90 @@ def delete(request):
 
     book_delete=[]
     member_delete=[]
+    liste_emprunts=[]
+    liste_book=[]
 
     data = request.POST
     id_data = data.get("id", "")
     isbn_data = data.get("book", "")
 
-    res_delete_adherent="delete from adherent where mdp =:identifiant"
-    res_delete_livre="delete from livre where mdp =:isbn"
+    con_verify_adherent = sqlite3.connect("bibliotheque.db")
+    cur_verify_adherent = con_verify_adherent.cursor()
+    res_verify_adherent = cur_verify_adherent.execute('SELECT identifiant FROM emprunt')
 
-    con_select_adherent = sqlite3.connect("bibliotheque.db")
-    cur_select_adherent = con_select_adherent.cursor()
-    res_select_adherent = cur_select_adherent.execute('SELECT * FROM adherent WHERE mdp="%s"' % id_data)
-    retour2 = res_select_adherent.fetchall()
+    con_verify_book = sqlite3.connect("bibliotheque.db")
+    cur_verify_book = con_verify_book.cursor()
+    res_verify_book = cur_verify_book.execute('SELECT mdp FROM emprunt')
 
-    con_select_adherent.commit()
-    
-    con_select_livre = sqlite3.connect("bibliotheque.db")
-    cur_select_livre = con_select_livre.cursor()
-    res_select_livre = cur_select_livre.execute('SELECT * FROM livre WHERE mdp="%s"' % isbn_data)
-    con_select_livre.commit()
-    retour = res_select_livre.fetchall()
+    con_verify_book.commit()
 
-    if data == {}:
-        book_delete = ""
+    for item in res_verify_adherent.fetchall():
+        liste_emprunts.append(str(item))
+
+    for item in res_verify_book.fetchall():
+        liste_book.append(str(item))
+
+    print(liste_book)
+    print("('"+isbn_data+"',)")
+
+    delete_impossible = ""
+
+    if "('"+id_data+"',)" in liste_emprunts:
+        member_delete = "Impossible: Cet adherent a un livre"
     else:
-        if retour == []:
-            book_delete = ""
-        else:
-            for item in retour:
-                book_delete.append(item)
+        res_delete_livre="delete from livre where mdp =:isbn"
 
-            book_delete = book_delete[0][1]
 
-    if data == {}:
-        member_delete = ""
-    else:
-        if retour2 == []:
+        res_delete_adherent="delete from adherent where mdp =:identifiant"
+
+        con_select_adherent = sqlite3.connect("bibliotheque.db")
+        cur_select_adherent = con_select_adherent.cursor()
+        res_select_adherent = cur_select_adherent.execute('SELECT * FROM adherent WHERE mdp="%s"' % id_data)
+        retour2 = res_select_adherent.fetchall()
+
+
+        con_select_adherent.commit()
+
+        if data == {}:
             member_delete = ""
         else:
-            for item in retour2:
-                member_delete.append(item)
+            if retour2 == []:
+                member_delete = ""
+            else:
+                for item in retour2:
+                    member_delete.append(item)
 
-            member_delete = member_delete[0][1]
+                member_delete = member_delete[0][1]
 
-    cur.execute(res_delete_adherent,{"identifiant":id_data})
-    cur.execute(res_delete_livre,{"isbn":isbn_data})
+        cur.execute(res_delete_adherent,{"identifiant":id_data})
+        con.commit()
 
-    con.commit()
-    con.close()
+    if "('"+isbn_data+"',)" in liste_book:
+        book_delete = "Impossible: Ce livre est emprunté"
+    else:
+    
+        con_select_livre = sqlite3.connect("bibliotheque.db")
+        cur_select_livre = con_select_livre.cursor()
+        res_select_livre = cur_select_livre.execute('SELECT * FROM livre WHERE mdp="%s"' % isbn_data)
+        con_select_livre.commit()
+        retour = res_select_livre.fetchall()
 
-    return render(request, 'ping/delete.html', {"item": member_delete, "item_book": book_delete})
+        if data == {}:
+            book_delete = ""
+        else:
+            if retour == []:
+                book_delete = ""
+            else:
+                for item in retour:
+                    book_delete.append(item)
+
+                book_delete = book_delete[0][2]
+                cur.execute(res_delete_livre,{"isbn":isbn_data})
+                con.commit()
+
+        con.close()
+
+    return render(request, 'ping/delete.html', {"item": member_delete, "item_book": book_delete, "impossible": delete_impossible})
     
 @csrf_exempt
 def emprunts(request):
@@ -215,9 +249,8 @@ def emprunts(request):
     res_verify_adherent = cur3.execute('SELECT  isbn FROM emprunt WHERE identifiant=?', [member_data] )
     for item in res_verify_adherent.fetchall():
         liste_verify.append(str(item))
-    
-    con.commit()
 
+    con3.close()
     
 
     book = isbnlib.meta(isbn_data)
