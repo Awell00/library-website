@@ -12,9 +12,6 @@ def index(response):
 
     return render(response, 'ping/base.html')
 
-def home(response):
-    return render(response, 'ping/home.html', {})
-
 @csrf_exempt
 def livre(request):
     con = sqlite3.connect("bibliotheque.db", )
