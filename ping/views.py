@@ -8,24 +8,26 @@ import uuid
 import requests
 from datetime import date, timedelta
 
-def index(response):
+# HOME PAGE
+def home(response):
+    return render(response, 'ping/home.html') # Display the main page of the website
 
-    return render(response, 'ping/base.html')
-
+# LIST OF BOOK AND ADD BOOK
 @csrf_exempt
-def livre(request):
-    con = sqlite3.connect("bibliotheque.db", )
+def book(request):
+    con = sqlite3.connect("bibliotheque.db", ) # Connect to the database
 
     livre_liste=[]
-    id = str(uuid.uuid4())[:8]
 
-    data = request.POST
-    isbn_data = data.get("isbn", "")
+    id = str(uuid.uuid4())[:8] # 8-digit random number for the added book identifier
 
-    cover_isbnlib = isbnlib.cover(isbn_data)
+    data = request.POST # Return the POST value on the book.html page 
+    isbn_data = data.get("isbn", "") # Select the ISBN value in a form with id='isbn'
 
-    cover_openlibrary="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn_data)
-    img_size = requests.get(cover_openlibrary).content
+    cover_isbnlib = isbnlib.cover(isbn_data) # Return the book cover with isbn data
+
+    cover_openlibrary="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn_data) # URL to return the book cover on openlibrery with isbn
+    img_size = requests.get(cover_openlibrary).content 
 
     if len(img_size) == 807:
         cover_img=cover_isbnlib.get('thumbnail')  # type: ignore
@@ -60,8 +62,9 @@ def livre(request):
     con.commit()
     con.close()
 
-    return render(request, 'ping/livre.html', {"livre": livre_liste, "item": value_new_livre, "cover": cover_img})
+    return render(request, 'ping/book.html', {"livre": livre_liste, "item": value_new_livre, "cover": cover_img}) # Send the variables that appear on the page with {"variable_name_page": variable_name_program}
 
+# ADD MEMBER
 @csrf_exempt
 def add(request):
     con = sqlite3.connect("bibliotheque.db")
@@ -74,8 +77,6 @@ def add(request):
     prenom_data = data.get("prenom", "")
     adresse_data = data.get("adresse", "")
     tel_data = data.get("tel", "")
-
-    
 
     if nom_data == '' or prenom_data == "" or adresse_data == "" or tel_data == "":
         pass
@@ -99,6 +100,7 @@ def add(request):
 
     return render(request, 'ping/add.html', {"item": value_new_adherent, "adherent_liste": liste_adherent})
 
+# DELETE BOOK AND MEMBER
 @csrf_exempt
 def delete(request):
     con = sqlite3.connect("bibliotheque.db")
@@ -191,6 +193,7 @@ def delete(request):
 
     return render(request, 'ping/delete.html', {"item": member_delete, "item_book": book_delete, "impossible": delete_impossible})
     
+# BORROW BOOK
 @csrf_exempt
 def emprunts(request):
     con = sqlite3.connect("bibliotheque.db", )
@@ -299,7 +302,7 @@ def emprunts(request):
 
     return render(request, 'ping/emprunts.html', {"item": value_new_emprunt, "liste_emprunts": liste_emprunts, "title": title_data, "erreur": emprunt_impossible})
 
-
+# LIST OF DELAYS
 @csrf_exempt
 def retard(request):
     con = sqlite3.connect("bibliotheque.db")
@@ -355,8 +358,6 @@ def retard(request):
         cur_retard.execute('DELETE FROM retour WHERE isbn="%s" AND identifiant="%s"' % (isbn_data,member_data))
         
         con_retard.commit()
-
-    
 
     res_retard = cur.execute("SELECT * FROM retour")
     con.commit()
