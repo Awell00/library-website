@@ -72,38 +72,45 @@ def book(request):
 # ADD MEMBER
 @csrf_exempt
 def add(request):
+    # Connect to the database
     con = sqlite3.connect("bibliotheque.db")
+    cur = con.cursor()
     
-    liste_adherent=[]
-    id = str(uuid.uuid4())[:8]
+    id = str(uuid.uuid4())[:8] # 8-digit random number for the added member identifier
 
-    data = request.POST
+    data = request.POST # Return the POST value on the add.html page 
+
+    # Variable for member information with form data
     nom_data = data.get("nom", "")
     prenom_data = data.get("prenom", "")
     adresse_data = data.get("adresse", "")
     tel_data = data.get("tel", "")
 
+    # Add the member data to the database with SQLite
     if nom_data == '' or prenom_data == "" or adresse_data == "" or tel_data == "":
         pass
     else:
+        # Commands for the insertion of a value in the database
         res_add_adherent ='INSERT OR REPLACE INTO adherent(nomAdherent, prenomAdherent, adresse, telephone, mdp) VALUES ("'+nom_data+'","'+prenom_data+'", "'+adresse_data+'","'+tel_data+'","'+id+'")'
-        cur = con.cursor()
         cur.execute(res_add_adherent)
         con.commit()
 
-    cur = con.cursor()
+    # Select all members data with SQLite
     res_select_adherent = cur.execute("SELECT * FROM adherent")
     con.commit()
   
+    # Add all values in the list to be displayed on the page
+    liste_adherent=[]
     for item in res_select_adherent.fetchall():
         liste_adherent.append(item)
 
+    # Return the new member inserted in the database to display it on the page
     if data == {}:
         value_new_adherent = ""
     else:
         value_new_adherent = liste_adherent[-1][1]
 
-    return render(request, 'ping/add.html', {"item": value_new_adherent, "adherent_liste": liste_adherent})
+    return render(request, 'ping/add.html', {"item": value_new_adherent, "adherent_liste": liste_adherent}) # Send the variables that appear on the page with {"variable_name_page": variable_name_program}
 
 # DELETE BOOK AND MEMBER
 @csrf_exempt
