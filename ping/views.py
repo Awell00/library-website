@@ -15,45 +15,50 @@ def home(response):
 # LIST OF BOOK AND ADD BOOK
 @csrf_exempt
 def book(request):
-    con = sqlite3.connect("bibliotheque.db", ) # Connect to the database
-
-    livre_liste=[]
+    # Connect to the database
+    con = sqlite3.connect("bibliotheque.db", ) 
+    cur = con.cursor()
 
     id = str(uuid.uuid4())[:8] # 8-digit random number for the added book identifier
 
     data = request.POST # Return the POST value on the book.html page 
     isbn_data = data.get("isbn", "") # Select the ISBN value in a form with id='isbn'
 
-    cover_isbnlib = isbnlib.cover(isbn_data) # Return the book cover with isbn data
+    cover_isbnlib = isbnlib.cover(isbn_data) # Return the book cover with isbnlib data
 
     cover_openlibrary="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn_data) # URL to return the book cover on openlibrery with isbn
-    img_size = requests.get(cover_openlibrary).content 
+    img_size = requests.get(cover_openlibrary).content # Return the weight of the content as kb
 
-    if len(img_size) == 807:
-        cover_img=cover_isbnlib.get('thumbnail')  # type: ignore
+    if len(img_size) == 807: # The weight of a null content is 807 kb, when there is no image 
+        cover_img=cover_isbnlib.get('thumbnail')  # type: ignore // Selection of the book cover with the best quality
     else:
-        cover_img="https://covers.openlibrary.org/b/isbn/{}-L.jpg".format(isbn_data)
+        cover_img=cover_openlibrary 
 
+    # Variable for book information with isbnlib data
     book = isbnlib.meta(isbn_data)
     author_data = str(book.get('Authors'))[2:-2]
     title_data = str(book.get('Title'))
     publisher_data = str(book.get('Publisher'))
     
+    # Add the book data to the database with SQLite
     if isbn_data == '':
         pass
     else:
+        # Commands for the insertion of a value in the database
         res_add_livre ='INSERT OR REPLACE INTO livre(mdp, isbn, titre, auteur, editeur, emprunt) VALUES ("'+id+'","'+isbn_data+'","'+title_data+'","'+author_data+'","'+publisher_data+'",0)'
-        cur = con.cursor()
         cur.execute(res_add_livre)
-        con.commit()
+        con.commit() 
 
-    cur = con.cursor()
+    # Select all books data with SQLite
     res__select_livre = cur.execute("SELECT * FROM livre")
     con.commit()
 
+    # Add all values in the list to be displayed on the page
+    livre_liste=[]
     for item in res__select_livre.fetchall():
         livre_liste.append(item)
 
+    # Return the new book inserted in the database to display it on the page
     if data == {}:
         value_new_livre = ""
     else:
