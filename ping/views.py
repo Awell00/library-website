@@ -109,60 +109,45 @@ def add(request):
         value_new_adherent = ""
     else:
         value_new_adherent = liste_adherent[-1][1]
+    
+    con.close()
 
     return render(request, 'ping/add.html', {"item": value_new_adherent, "adherent_liste": liste_adherent}) # Send the variables that appear on the page with {"variable_name_page": variable_name_program}
 
 # DELETE BOOK AND MEMBER
 @csrf_exempt
 def delete(request):
+    # Connect to the database
     con = sqlite3.connect("bibliotheque.db")
     cur = con.cursor()
 
-    book_delete=[]
-    member_delete=[]
-    liste_emprunts=[]
-    liste_book=[]
+    data = request.POST # Return the POST value on the add.html page 
 
-    data = request.POST
+    # Variable for member or book information with form data
     id_data = data.get("id", "")
     isbn_data = data.get("book", "")
+    
+    # Selection with SQLlite to check if the book or member value is in the database
+    res_verify_adherent = cur.execute('SELECT identifiant FROM emprunt')
+    liste_emprunts = [str(item) for item in res_verify_adherent] # Add all selected values to the database to check if it is possible to delete a member
 
-    con_verify_adherent = sqlite3.connect("bibliotheque.db")
-    cur_verify_adherent = con_verify_adherent.cursor()
-    res_verify_adherent = cur_verify_adherent.execute('SELECT identifiant FROM emprunt')
+    res_verify_book = cur.execute('SELECT mdp FROM emprunt') 
+    liste_book = [str(item) for item in res_verify_book] # or book
 
-    con_verify_book = sqlite3.connect("bibliotheque.db")
-    cur_verify_book = con_verify_book.cursor()
-    res_verify_book = cur_verify_book.execute('SELECT mdp FROM emprunt')
-
-    con_verify_book.commit()
-
-    for item in res_verify_adherent.fetchall():
-        liste_emprunts.append(str(item))
-
-    for item in res_verify_book.fetchall():
-        liste_book.append(str(item))
-
-    print(liste_book)
-    print("('"+isbn_data+"',)")
 
     delete_impossible = ""
-
+    member_delete=[]
     if "('"+id_data+"',)" in liste_emprunts:
         member_delete = "Impossible: Cet adherent a un livre"
     else:
         res_delete_livre="delete from livre where mdp =:isbn"
-
-
         res_delete_adherent="delete from adherent where mdp =:identifiant"
 
-        con_select_adherent = sqlite3.connect("bibliotheque.db")
-        cur_select_adherent = con_select_adherent.cursor()
+        cur_select_adherent = con.cursor()
         res_select_adherent = cur_select_adherent.execute('SELECT * FROM adherent WHERE mdp="%s"' % id_data)
         retour2 = res_select_adherent.fetchall()
 
-
-        con_select_adherent.commit()
+        con.commit()
 
         if data == {}:
             member_delete = ""
@@ -178,6 +163,7 @@ def delete(request):
         cur.execute(res_delete_adherent,{"identifiant":id_data})
         con.commit()
 
+    book_delete=[]
     if "('"+isbn_data+"',)" in liste_book:
         book_delete = "Impossible: Ce livre est emprunté"
     else:
